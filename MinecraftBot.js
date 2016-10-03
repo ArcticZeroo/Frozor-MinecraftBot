@@ -42,8 +42,6 @@ var json_color_to_chalk = {
     yellow:       log.chalk.yellow,
     white:        log.chalk.white.bold,
     reset:        log.chalk.white
-
-
 }
 
 class MinecraftBot extends EventEmitter{
@@ -140,16 +138,18 @@ class MinecraftBot extends EventEmitter{
     consoleColorChat(chat, packet){
         var split = chat.split(`§`);
 
-        var coloredMessage = "";
+        var coloredMessage = '';
 
         if(split.length == 1){
             var extra = packet.json.extra;
-            if(!extra){
-                log.debug(packet);
-                return chat;
-            }
+            if(!extra) return chat;
 
             for(var item of extra){
+                if(typeof item == 'string'){
+                    coloredMessage += item;
+                    continue;
+                }
+
                 var colorCode = item.color;
                 var colorCodeFunction = json_color_to_chalk[colorCode];
 
