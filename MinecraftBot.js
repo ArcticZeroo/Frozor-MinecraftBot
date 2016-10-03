@@ -113,8 +113,6 @@ class MinecraftBot extends EventEmitter{
 
             if(log.chalk.stripColor(coloredMessage).indexOf('GWEN >') > -1) return;
 
-            log.debug(JSON.stringify(packet));
-
             if(!coloredMessage) coloredMessage = ' ';
             log.info(coloredMessage, "SELF|CHAT");
 
