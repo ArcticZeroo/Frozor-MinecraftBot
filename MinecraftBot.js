@@ -109,15 +109,14 @@ class MinecraftBot extends EventEmitter{
 
         this.getBot().on('message', (packet)=>{
             var message = packet.toString().replace('  ', ' ');
+            this.self.emit('chat', message.replace(/\u00A7[0-9A-FK-OR]/ig,''));
 
             var coloredMessage = this.consoleColorChat(message, packet);
 
             if(log.chalk.stripColor(coloredMessage).indexOf('GWEN >') > -1) return;
 
             if(!coloredMessage) coloredMessage = ' ';
-            log.info(coloredMessage, "SELF|CHAT");
-
-            this.self.emit('chat', message.replace(/\u00A7[0-9A-FK-OR]/ig,''));
+            log.info(coloredMessage, "CHAT");
         });
 
         this.getBot().on('kicked', (reason)=>{
