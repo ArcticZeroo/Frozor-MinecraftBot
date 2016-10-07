@@ -1,5 +1,6 @@
 var EventEmitter = require('events');
 var log          = require('frozor-logger');
+var mineflayer   = require('mineflayer');
 var Entity       = require('./MinecraftEntity');
 
 var mc_color_to_chalk = {
@@ -46,12 +47,12 @@ var json_color_to_chalk = {
 
 class MinecraftBot extends EventEmitter{
     /**
-     * @param mineflayer - Mineflayer
      * @param {string} host - The IP of the server you are connecting to.
+     * @param {string, number} port - The port to connect to
      * @param {string} username - The username you want to log in with
      * @param {string} password - The password you want to use to log in
      */
-    constructor(mineflayer, host, port, username, password){
+    constructor(username, password, host, port){
         super();
         this.self     = this;
         this._mf      = mineflayer;
