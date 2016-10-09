@@ -57,6 +57,7 @@ class MinecraftBot extends EventEmitter{
         this.self     = this;
         this._mf      = mineflayer;
         this._bot     = null;
+        this._server  = null;
         this.host     = host;
         this.port     = port;
         this.username = username;
@@ -87,6 +88,7 @@ class MinecraftBot extends EventEmitter{
 
         //this.setChatPatterns();
         this.registerEvents();
+        return this;
     }
 
     getBot(){
@@ -99,6 +101,15 @@ class MinecraftBot extends EventEmitter{
 
     getEntity(){
         return new Entity(this.getBot().entity);
+    }
+
+    setServer(server){
+        this._server = server;
+        return this;
+    }
+
+    getServer(){
+        return this._server;
     }
 
     registerEvents(){
