@@ -109,7 +109,7 @@ class MinecraftBot extends EventEmitter{
 
         this.getBot().on('message', (packet)=>{
             var message = packet.toString().replace('  ', ' ');
-            this.self.emit('chat', message.replace(/\u00A7[0-9A-FK-OR]/ig,''));
+            this.self.emit('chat', message.replace(/\u00A7[0-9A-FK-OR]/ig,''), packet);
 
             var coloredMessage = this.consoleColorChat(message, packet);
 
@@ -120,7 +120,7 @@ class MinecraftBot extends EventEmitter{
         });
 
         this.getBot().on('kicked', (reason)=>{
-            log.error(`I just got kicked for the reason ${log.chalk.red(reason.text)}!`);
+            log.error(`I just got kicked for the reason ${log.chalk.red(JSON.stringify(reason))}!`);
         })
 
     }
