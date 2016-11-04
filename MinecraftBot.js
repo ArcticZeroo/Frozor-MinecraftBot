@@ -1,48 +1,48 @@
 var EventEmitter = require('events');
-var log          = require('frozor-logger');
+var chalk        = require('chalk');
 var mineflayer   = require('mineflayer');
 var Entity       = require('./MinecraftEntity');
 
 var mc_color_to_chalk = {
-    4: log.chalk.red,
-    c: log.chalk.red.bold,
-    6: log.chalk.yellow,
-    e: log.chalk.yellow,
-    2: log.chalk.green,
-    a: log.chalk.green,
-    b: log.chalk.blue.bold,
-    3: log.chalk.cyan,
-    1: log.chalk.blue,
-    9: log.chalk.blue,
-    d: log.chalk.magenta.bold,
-    5: log.chalk.magenta,
-    f: log.chalk.white.bold,
-    7: log.chalk.white,
-    l: log.chalk.bold,
-    n: log.chalk.underline,
-    o: log.chalk.italics,
-    m: log.chalk.strikethrough,
-    r: log.chalk.reset,
+    4: chalk.red,
+    c: chalk.red.bold,
+    6: chalk.yellow,
+    e: chalk.yellow,
+    2: chalk.green,
+    a: chalk.green,
+    b: chalk.blue.bold,
+    3: chalk.cyan,
+    1: chalk.blue,
+    9: chalk.blue,
+    d: chalk.magenta.bold,
+    5: chalk.magenta,
+    f: chalk.white.bold,
+    7: chalk.white,
+    l: chalk.bold,
+    n: chalk.underline,
+    o: chalk.italics,
+    m: chalk.strikethrough,
+    r: chalk.reset,
 };
 
 var json_color_to_chalk = {
-    black:        log.chalk.black.bold,
-    dark_blue:    log.chalk.blue,
-    dark_green:   log.chalk.green,
-    dark_aqua:    log.chalk.cyan,
-    dark_red:     log.chalk.red,
-    dark_purple:  log.chalk.magenta,
-    gold:         log.chalk.yellow,
-    gray:         log.chalk.white,
-    dark_gray:    log.chalk.gray,
-    blue:         log.chalk.blue,
-    green:        log.chalk.green,
-    aqua:         log.chalk.cyan.bold,
-    red:          log.chalk.red.bold,
-    light_purple: log.chalk.magenta.bold,
-    yellow:       log.chalk.yellow,
-    white:        log.chalk.white.bold,
-    reset:        log.chalk.white
+    black:        chalk.black.bold,
+    dark_blue:    chalk.blue,
+    dark_green:   chalk.green,
+    dark_aqua:    chalk.cyan,
+    dark_red:     chalk.red,
+    dark_purple:  chalk.magenta,
+    gold:         chalk.yellow,
+    gray:         chalk.white,
+    dark_gray:    chalk.gray,
+    blue:         chalk.blue,
+    green:        chalk.green,
+    aqua:         chalk.cyan.bold,
+    red:          chalk.red.bold,
+    light_purple: chalk.magenta.bold,
+    yellow:       chalk.yellow,
+    white:        chalk.white.bold,
+    reset:        chalk.white
 };
 
 class MinecraftBot extends EventEmitter{
@@ -54,6 +54,7 @@ class MinecraftBot extends EventEmitter{
      */
     constructor(username, password, host, port, silent, prefix){
         super();
+        this.log      = require('frozor-logger');
         this.self     = this;
         this._mf      = mineflayer;
         this._bot     = null;
@@ -74,12 +75,12 @@ class MinecraftBot extends EventEmitter{
             }
         }, 1000);
 
-        log.setPrefix(prefix);
-        if(silent) log.setLocalLogLevel(`NONE`);
+        this.this.log.setPrefix(prefix);
+        if(silent) this.this.log.setLocalLogLevel(`NONE`);
     }
 
     initialize(){
-        log.info(`Logging into ${log.chalk.cyan(this.host)}...`, 'SELF');
+        this.log.info(`Logging into ${this.log.chalk.cyan(this.host)}...`, 'SELF');
         
         this._bot = this._mf.createBot({
             host    : this.host,
@@ -116,7 +117,7 @@ class MinecraftBot extends EventEmitter{
 
     registerEvents(){
         this.getBot().on('login', ()=>{
-            log.info(`Logged into ${log.chalk.cyan(this.host)} as ${log.chalk.cyan(this._bot.username)}`, "SELF");
+            this.log.info(`Logged into ${this.log.chalk.cyan(this.host)} as ${this.log.chalk.cyan(this._bot.username)}`, "SELF");
             this.emit('login');
         });
 
@@ -126,14 +127,14 @@ class MinecraftBot extends EventEmitter{
 
             var coloredMessage = this.consoleColorChat(message, packet);
 
-            if(log.chalk.stripColor(coloredMessage).indexOf('GWEN >') > -1) return;
+            if(this.log.chalk.stripColor(coloredMessage).indexOf('GWEN >') > -1) return;
 
             if(!coloredMessage) coloredMessage = ' ';
-            log.info(coloredMessage, "CHAT");
+            this.log.info(coloredMessage, "CHAT");
         });
 
         this.getBot().on('kicked', (reason)=>{
-            log.error(`I just got kicked for the reason ${log.chalk.red(JSON.stringify(reason))}!`);
+            this.log.error(`I just got kicked for the reason ${this.log.chalk.red(JSON.stringify(reason))}!`);
         })
 
     }
@@ -190,7 +191,7 @@ class MinecraftBot extends EventEmitter{
                 continue;
             }
             coloredMessage += colorCodeFunction(message.substring(1));
-            //log.debug(`Chat ${chat} - Code ${colorCode}. ${colorCodeFunction(message)}`)
+            //this.log.debug(`Chat ${chat} - Code ${colorCode}. ${colorCodeFunction(message)}`)
         }
         return coloredMessage;
     }
