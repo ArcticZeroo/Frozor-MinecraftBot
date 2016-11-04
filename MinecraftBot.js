@@ -1,3 +1,4 @@
+var Logger       = require('frozor-logger');
 var EventEmitter = require('events');
 var chalk        = require('chalk');
 var mineflayer   = require('mineflayer');
@@ -54,7 +55,7 @@ class MinecraftBot extends EventEmitter{
      */
     constructor(username, password, host, port, silent, prefix){
         super();
-        this.log      = require('frozor-logger');
+        this.log      = new Logger(prefix);
 
         this.self     = this;
         this._mf      = mineflayer;
@@ -76,8 +77,7 @@ class MinecraftBot extends EventEmitter{
             }
         }, 1000);
 
-        if(silent) this.log.setLocalLogLevel(`NONE`);
-        if(!silent && prefix) this.log.setPrefix(prefix);
+        if(silent) this.log.setLocalLogLevel('NONE');
     }
 
     initialize(){
