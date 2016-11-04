@@ -55,6 +55,7 @@ class MinecraftBot extends EventEmitter{
     constructor(username, password, host, port, silent, prefix){
         super();
         this.log      = require('frozor-logger');
+
         this.self     = this;
         this._mf      = mineflayer;
         this._bot     = null;
@@ -75,8 +76,8 @@ class MinecraftBot extends EventEmitter{
             }
         }, 1000);
 
-        this.log.setPrefix(prefix);
         if(silent) this.log.setLocalLogLevel(`NONE`);
+        if(!silent && prefix) this.log.setPrefix(prefix);
     }
 
     initialize(){
