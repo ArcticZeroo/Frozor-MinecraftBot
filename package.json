@@ -12,9 +12,8 @@
   "author": "ArcticZeroo",
   "license": "ISC",
   "dependencies": {
-    "frozor-logger": "^1.0.4",
-    "minecraft-protocol": "^1.0.1",
-    "mineflayer": "^1.7.5",
-    "switch": "0.0.0"
+    "frozor-logger": "latest",
+    "minecraft-protocol": "latest",
+    "mineflayer": "latest"
   }
 }

@@ -23,7 +23,7 @@ var mc_color_to_chalk = {
     o: log.chalk.italics,
     m: log.chalk.strikethrough,
     r: log.chalk.reset,
-}
+};
 
 var json_color_to_chalk = {
     black:        log.chalk.black.bold,
@@ -43,7 +43,7 @@ var json_color_to_chalk = {
     yellow:       log.chalk.yellow,
     white:        log.chalk.white.bold,
     reset:        log.chalk.white
-}
+};
 
 class MinecraftBot extends EventEmitter{
     /**
@@ -52,7 +52,7 @@ class MinecraftBot extends EventEmitter{
      * @param {string} username - The username you want to log in with
      * @param {string} password - The password you want to use to log in
      */
-    constructor(username, password, host, port){
+    constructor(username, password, host, port, silent, prefix){
         super();
         this.self     = this;
         this._mf      = mineflayer;
@@ -74,6 +74,8 @@ class MinecraftBot extends EventEmitter{
             }
         }, 1000);
 
+        log.setPrefix(prefix);
+        if(silent) log.setLocalLogLevel(`NONE`);
     }
 
     initialize(){
