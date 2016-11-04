@@ -75,8 +75,8 @@ class MinecraftBot extends EventEmitter{
             }
         }, 1000);
 
-        this.this.log.setPrefix(prefix);
-        if(silent) this.this.log.setLocalLogLevel(`NONE`);
+        this.log.setPrefix(prefix);
+        if(silent) this.log.setLocalLogLevel(`NONE`);
     }
 
     initialize(){
