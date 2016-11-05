@@ -136,7 +136,11 @@ class MinecraftBot extends EventEmitter{
 
         this.getBot().on('kicked', (reason)=>{
             this.log.error(`I just got kicked for the reason ${this.log.chalk.red(JSON.stringify(reason))}!`);
-        })
+        });
+
+        this.getBot().on('playerJoined', (player)=>{
+           this.emit('playerJoined', new Entity(player));
+        });
 
     }
 
