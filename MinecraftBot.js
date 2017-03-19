@@ -1,10 +1,9 @@
-var Logger       = require('frozor-logger');
-var EventEmitter = require('events');
-var chalk        = require('chalk');
-var mineflayer   = require('mineflayer');
-var Entity       = require('./MinecraftEntity');
+const Logger       = require('frozor-logger');
+const EventEmitter = require('events');
+const chalk        = require('chalk');
+const mineflayer   = require('mineflayer');
 
-var mc_color_to_chalk = {
+let mc_color_to_chalk = {
     4: chalk.red,
     c: chalk.red.bold,
     6: chalk.yellow,
@@ -26,7 +25,7 @@ var mc_color_to_chalk = {
     r: chalk.reset,
 };
 
-var json_color_to_chalk = {
+let json_color_to_chalk = {
     black:        chalk.black.bold,
     dark_blue:    chalk.blue,
     dark_green:   chalk.green,
@@ -52,15 +51,16 @@ class MinecraftBot extends EventEmitter{
      * @param {string, number} port - The port to connect to
      * @param {string} username - The username you want to log in with
      * @param {string} password - The password you want to use to log in
+     * @param {boolean} silent - Whether the bot should be silent
+     * @param {string} prefix - What prefix the bot should use for the logger
      */
-    constructor(username, password, host, port, silent, prefix){
+    constructor(username, password, host = 'localhost', port = 25565, silent = false, prefix){
         super();
-        this.log      = new Logger(prefix);
+        this.log      = new Logger(((prefix)?prefix+'-':'')+'minecraftbot');
 
         this.self     = this;
-        this._mf      = mineflayer;
-        this._bot     = null;
-        this._server  = null;
+        this.bot      = null;
+        this.server   = null;
         this.host     = host;
         this.port     = port;
         this.username = username;
@@ -68,107 +68,81 @@ class MinecraftBot extends EventEmitter{
 
         this.message_queue          = [];
         this.message_queue_last     = 0;
+
         setInterval(()=>{
-            var timeNow = Date.now()/1000;
+            let timeNow = Date.now()/1000;
             if(this.message_queue.length > 0){
-                var messageToSend = this.message_queue.splice(0, 1).toString();
+                let messageToSend = this.message_queue.shift();
                 this.chat(messageToSend);
                 this.message_queue_last = timeNow;
             }
         }, 1000);
 
-        if(silent) this.log.setLocalLogLevel('NONE');
+        if(silent){
+            this.log.transports.console.level = 'warn';
+        }
     }
 
-    initialize(){
-        this.log.info(`Logging into ${this.log.chalk.cyan(this.host)}...`, 'SELF');
+    init(){
+        this.log.info(`Logging into ${chalk.cyan(this.host)}...`, 'INIT');
         
-        this._bot = this._mf.createBot({
+        this.bot = mineflayer.createBot({
             host    : this.host,
             port    : this.port,
             username: this.username,
             password: this.password
         });
 
-        //this.setChatPatterns();
         this.registerEvents();
-        return this;
     }
 
     getBot(){
-        return this._bot;
+        return this.bot;
     }
 
     getUsername(){
-        return this.getBot().username;
-    }
-
-    getEntity(){
-        return new Entity(this.getBot().entity);
-    }
-
-    setServer(server){
-        this._server = server;
-        return this;
-    }
-
-    getServer(){
-        return this._server;
+        return this.bot.username;
     }
 
     registerEvents(){
-        this.getBot().on('login', ()=>{
-            this.log.info(`Logged into ${this.log.chalk.cyan(this.host)} as ${this.log.chalk.cyan(this._bot.username)}`, "SELF");
-            this.emit('login');
+        this.bot.on('login', ()=>{
+            this.log.info(`Logged into ${chalk.cyan(this.host)} as ${chalk.cyan(this.bot.username)}`, "SELF");
         });
 
-        this.getBot().on('message', (packet)=>{
-            var message = packet.toString().replace('  ', ' ');
+        this.bot.on('message', (packet)=>{
+            let message = packet.toString().replace('  ', ' ');
             this.self.emit('chat', message.replace(/\u00A7[0-9A-FK-OR]/ig,''), packet);
 
-            var coloredMessage = this.consoleColorChat(message, packet);
+            let coloredMessage = MinecraftBot.consoleColorChat(message, packet);
 
-            if(this.log.chalk.stripColor(coloredMessage).indexOf('GWEN >') > -1) return;
+            if(chalk.stripColor(coloredMessage).indexOf('GWEN >') > -1) return;
 
             if(!coloredMessage) coloredMessage = ' ';
             this.log.info(coloredMessage, "CHAT");
         });
 
-        this.getBot().on('kicked', (reason)=>{
-            this.log.error(`I just got kicked for the reason ${this.log.chalk.red(JSON.stringify(reason))}!`);
+        this.bot.on('kicked', (reason)=>{
+            this.log.error(`I just got kicked for the reason ${chalk.red(JSON.stringify(reason))}!`);
         });
-
-        this.getBot().on('playerJoined', (player)=>{
-           this.emit('playerJoined', new Entity(player));
-        });
-
     }
 
-    overrideEvents(override_function){
-        this.registerEvents = override_function;
-    }
+    static consoleColorChat(chat, packet){
+        let split = chat.split(`§`);
 
-    slackFormatChat(chat){
-
-    }
-
-    consoleColorChat(chat, packet){
-        var split = chat.split(`§`);
-
-        var coloredMessage = '';
+        let coloredMessage = '';
 
         if(split.length == 1){
-            var extra = packet.json.extra;
+            let extra = packet.json.extra;
             if(!extra) return chat;
 
-            for(var item of extra){
+            for(let item of extra){
                 if(typeof item == 'string'){
                     coloredMessage += item;
                     continue;
                 }
 
-                var colorCode = item.color;
-                var colorCodeFunction = json_color_to_chalk[colorCode];
+                let colorCode = item.color;
+                let colorCodeFunction = json_color_to_chalk[colorCode];
 
                 if(!colorCodeFunction){
                     coloredMessage += item.text;
@@ -180,11 +154,11 @@ class MinecraftBot extends EventEmitter{
             return coloredMessage;
         }
 
-        for(var index in split){
-            var message = split[index];
+        for(let index in split){
+            let message = split[index];
             if(message.length == 1) continue;
-            var colorCode = message.substring(0, 1);
-            var colorCodeFunction = mc_color_to_chalk[colorCode];
+            let colorCode = message.substring(0, 1);
+            let colorCodeFunction = mc_color_to_chalk[colorCode];
 
             if(colorCode == "l" || colorCode == "m" || colorCode == "n" || colorCode == "o"){
                 coloredMessage += mc_color_to_chalk[split[index-1]](colorCodeFunction(message.substring(1)));
@@ -208,12 +182,12 @@ class MinecraftBot extends EventEmitter{
      * @param message - The message to send in chat.
      */
     chat(message){
-        this.getBot().chat(message);
+        this.bot.chat(message);
     }
 
     /**
      * @method - This method queues messages so that the Minecraft Bot isn't hit by Mineplex's
-     * command center, which limits at just below 1 message/second. To do this, the _bot stores
+     * command center, which limits at just below 1 message/second. To do this, the bot stores
      * the last sent message, and when another message is requested to be sent the two compare
      * to see if one has been sent in the last second. If so, it is added to this.message_queue
      * which is processed at a regular interval. Additionally, if there are messages pending
@@ -223,10 +197,10 @@ class MinecraftBot extends EventEmitter{
      * @param message - The chat message to queue.
      */
     queueMessage(message){
-        var timeNow = Date.now()/1000;
-        var messageType = typeof message;
-        if(messageType.toLowerCase() != "string") message = message.toString();
-        var last_message_difference = timeNow - this.message_queue_last;
+        let timeNow = Date.now()/1000;
+        if((typeof message).toLowerCase() != 'string') message = message.toString();
+        
+        let last_message_difference = timeNow - this.message_queue_last;
         if(this.message_queue.length > 0){
             this.message_queue.push(message);
         }else if(last_message_difference >= 1){
@@ -242,9 +216,9 @@ class MinecraftBot extends EventEmitter{
     }
 
     end(){
-        if(!this.getBot()) return;
-        this.getBot().quit();
-        this.getBot().end();
+        if(!this.bot) return;
+        this.bot.quit();
+        this.bot.end();
     }
 }
 

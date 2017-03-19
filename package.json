@@ -13,8 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "chalk": "latest",
-    "frozor-logger": "latest",
-    "frozor-slackbot": "^1.3.0",
+    "frozor-logger": "^3.0.11",
     "minecraft-protocol": "latest",
     "mineflayer": "latest"
   }
