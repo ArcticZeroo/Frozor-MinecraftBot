@@ -1,6 +1,6 @@
 {
   "name": "frozor-minecraftbot",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "A Minecraft Bot written in node with an okay API",
   "main": "MinecraftBot.js",
   "keywords": [
