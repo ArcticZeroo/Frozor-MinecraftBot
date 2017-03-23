@@ -140,7 +140,7 @@ class MinecraftBot extends EventEmitter{
             if(!extra) return chat;
 
             extra.map((i)=> (typeof i == 'string') ? {color: 'white', text: i} : i)
-                .forEach((i)=> message += (Color.JSON.get(item.color))(item.text));
+                .forEach((i)=> message += (Color.JSON.get(i.color))(i.text));
         }else{
             chat.split('§')
                 .filter((i)=> i.length > 1)
