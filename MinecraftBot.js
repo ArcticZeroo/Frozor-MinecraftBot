@@ -3,46 +3,47 @@ const EventEmitter = require('events');
 const chalk        = require('chalk');
 const mineflayer   = require('mineflayer');
 
-let mc_color_to_chalk = {
-    4: chalk.red,
-    c: chalk.red.bold,
-    6: chalk.yellow,
-    e: chalk.yellow,
-    2: chalk.green,
-    a: chalk.green,
-    b: chalk.blue.bold,
-    3: chalk.cyan,
-    1: chalk.blue,
-    9: chalk.blue,
-    d: chalk.magenta.bold,
-    5: chalk.magenta,
-    f: chalk.white.bold,
-    7: chalk.white,
-    l: chalk.bold,
-    n: chalk.underline,
-    o: chalk.italics,
-    m: chalk.strikethrough,
-    r: chalk.reset,
-};
-
-let json_color_to_chalk = {
-    black:        chalk.black.bold,
-    dark_blue:    chalk.blue,
-    dark_green:   chalk.green,
-    dark_aqua:    chalk.cyan,
-    dark_red:     chalk.red,
-    dark_purple:  chalk.magenta,
-    gold:         chalk.yellow,
-    gray:         chalk.white,
-    dark_gray:    chalk.gray,
-    blue:         chalk.blue,
-    green:        chalk.green,
-    aqua:         chalk.cyan.bold,
-    red:          chalk.red.bold,
-    light_purple: chalk.magenta.bold,
-    yellow:       chalk.yellow,
-    white:        chalk.white.bold,
-    reset:        chalk.white
+const Color = {
+    JSON: {
+        black:        chalk.black.bold,
+        dark_blue:    chalk.blue,
+        dark_green:   chalk.green,
+        dark_aqua:    chalk.cyan,
+        dark_red:     chalk.red,
+        dark_purple:  chalk.magenta,
+        gold:         chalk.yellow,
+        gray:         chalk.white,
+        dark_gray:    chalk.gray,
+        blue:         chalk.blue,
+        green:        chalk.green,
+        aqua:         chalk.cyan.bold,
+        red:          chalk.red.bold,
+        light_purple: chalk.magenta.bold,
+        yellow:       chalk.yellow,
+        white:        chalk.white.bold,
+        reset:        chalk.white
+    },
+    MINECRAFT: {
+        4: chalk.red,
+        c: chalk.red.bold,
+        6: chalk.yellow,
+        e: chalk.yellow,
+        2: chalk.green,
+        a: chalk.green,
+        b: chalk.blue.bold,
+        3: chalk.cyan,
+        1: chalk.blue,
+        9: chalk.blue,
+        d: chalk.magenta.bold,
+        5: chalk.magenta,
+        f: chalk.white.bold,
+        7: chalk.white,
+        l: chalk.bold,
+        n: chalk.underline,
+        o: chalk.italics,
+        m: chalk.strikethrough,
+        r: chalk.reset,
+    }
 };
 
 class MinecraftBot extends EventEmitter{
@@ -56,7 +57,7 @@ class MinecraftBot extends EventEmitter{
      */
     constructor(username, password, host = 'localhost', port = 25565, silent = false, prefix){
         super();
-        this.log      = new Logger(((prefix)?prefix+'-':'')+'minecraftbot');
+        this.log      = new Logger(((prefix)?prefix+'-':'')+'MINECRAFTBOT');
 
         this.self     = this;
         this.bot      = null;
@@ -110,15 +111,17 @@ class MinecraftBot extends EventEmitter{
         });
 
         this.bot.on('message', (packet)=>{
-            let message = packet.toString().replace('  ', ' ');
+            let message = packet.toString().replace(/  /g, ' ');
+
             this.self.emit('chat', message.replace(/\u00A7[0-9A-FK-OR]/ig,''), packet);
 
             let coloredMessage = MinecraftBot.consoleColorChat(message, packet);
 
-            if(chalk.stripColor(coloredMessage).indexOf('GWEN >') > -1) return;
+            if(coloredMessage){
+                if(chalk.stripColor(coloredMessage).indexOf('GWEN >') > -1) return;
 
-            if(!coloredMessage) coloredMessage = ' ';
-            this.log.info(coloredMessage, "CHAT");
+                this.log.info(coloredMessage, 'CHAT');
+            }
         });
 
         this.bot.on('kicked', (reason)=>{
@@ -127,52 +130,39 @@ class MinecraftBot extends EventEmitter{
     }
 
     static consoleColorChat(chat, packet){
-        let split = chat.split(`§`);
+        let message = '';
 
-        let coloredMessage = '';
-
-        if(split.length == 1){
+        if(!chat.includes('§')){
             let extra = packet.json.extra;
+
             if(!extra) return chat;
 
             for(let item of extra){
                 if(typeof item == 'string'){
-                    coloredMessage += item;
+                    message += item;
                     continue;
                 }
 
-                let colorCode = item.color;
-                let colorCodeFunction = json_color_to_chalk[colorCode];
+                let color = Color.JSON[item.color] || Color.JSON.white;
 
-                if(!colorCodeFunction){
-                    coloredMessage += item.text;
+                message += color(item.text);
+            }
+        }else{
+            let split = chat.split('§');
+
+            for(let item of split){
+                if(item.length == 1){
                     continue;
                 }
 
-                coloredMessage += colorCodeFunction(item.text);
+                let colorCode = item.substr(0, 1);
+                item = item.substr(1);
+
+                message += (Color.MINECRAFT[colorCode] || Color.JSON.white)(item);
             }
-            return coloredMessage;
         }
 
-        for(let index in split){
-            let message = split[index];
-            if(message.length == 1) continue;
-            let colorCode = message.substring(0, 1);
-            let colorCodeFunction = mc_color_to_chalk[colorCode];
-
-            if(colorCode == "l" || colorCode == "m" || colorCode == "n" || colorCode == "o"){
-                coloredMessage += mc_color_to_chalk[split[index-1]](colorCodeFunction(message.substring(1)));
-                continue;
-            }
-
-            if(!colorCodeFunction){
-                coloredMessage += message;
-                continue;
-            }
-            coloredMessage += colorCodeFunction(message.substring(1));
-            //this.log.debug(`Chat ${chat} - Code ${colorCode}. ${colorCodeFunction(message)}`)
-        }
-        return coloredMessage;
+        return message;
     }
 
     /**
