@@ -21,7 +21,8 @@ const Color = {
         light_purple: chalk.magenta.bold,
         yellow:       chalk.yellow,
         white:        chalk.white.bold,
-        reset:        chalk.white
+        reset:        chalk.white,
+        get:          (c)=> Color.JSON[c] || Color.JSON.white
     },
     MINECRAFT: {
         4: chalk.red,
@@ -43,6 +44,7 @@ const Color = {
         o: chalk.italics,
         m: chalk.strikethrough,
         r: chalk.reset,
+        get: (c)=> Color.MINECRAFT[c] || Color.JSON.white
     }
 };
 
@@ -137,29 +139,13 @@ class MinecraftBot extends EventEmitter{
 
             if(!extra) return chat;
 
-            for(let item of extra){
-                if(typeof item == 'string'){
-                    message += item;
-                    continue;
-                }
-
-                let color = Color.JSON[item.color] || Color.JSON.white;
-
-                message += color(item.text);
-            }
+            extra.map((i)=> (typeof i == 'string') ? {color: 'white', text: i} : i)
+                .forEach((i)=> message += (Color.JSON.get(item.color))(item.text));
         }else{
-            let split = chat.split('§');
-
-            for(let item of split){
-                if(item.length == 1){
-                    continue;
-                }
-
-                let colorCode = item.substr(0, 1);
-                item = item.substr(1);
-
-                message += (Color.MINECRAFT[colorCode] || Color.JSON.white)(item);
-            }
+            chat.split('§')
+                .filter((i)=> i.length > 1)
+                .map((i)=> ({ code: i.substr(0, 1), text: i.substr(1)}) )
+                .forEach((i)=> message += (Color.MINECRAFT.get(i.code))(i.text));
         }
 
         return message;
