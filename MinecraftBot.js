@@ -56,6 +56,7 @@ class MinecraftBot extends EventEmitter{
         super();
         this.options  = Object.assign({
             message_send_interval: 1000,
+            silent: false
         }, options);
         this.log      = new Logger(((this.options.prefix)?this.options.prefix+'-':'')+'MINECRAFTBOT');
 
