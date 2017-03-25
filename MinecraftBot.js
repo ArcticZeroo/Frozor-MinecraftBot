@@ -50,12 +50,7 @@ const Color = {
 
 class MinecraftBot extends EventEmitter{
     /**
-     * @param {string} host - The IP of the server you are connecting to.
-     * @param {string, number} port - The port to connect to
-     * @param {string} username - The username you want to log in with
-     * @param {string} password - The password you want to use to log in
-     * @param {boolean} silent - Whether the bot should be silent
-     * @param {string} prefix - What prefix the bot should use for the logger
+     * @param {Object} options - bot options, dude
      */
     constructor(options){
         super();
@@ -82,7 +77,7 @@ class MinecraftBot extends EventEmitter{
     }
 
     init(){
-        this.log.info(`Logging into ${chalk.cyan(this.host)}...`, 'INIT');
+        this.log.info(`Logging into ${chalk.cyan(this.options.host)}...`, 'INIT');
         
         this.bot = mineflayer.createBot({
             host    : this.options.host,
@@ -104,7 +99,7 @@ class MinecraftBot extends EventEmitter{
 
     registerEvents(){
         this.bot.on('login', ()=>{
-            this.log.info(`Logged into ${chalk.cyan(this.host)} as ${chalk.cyan(this.bot.username)}`, "SELF");
+            this.log.info(`Logged into ${chalk.cyan(this.options.host)} as ${chalk.cyan(this.bot.username)}`, "SELF");
         });
 
         this.bot.on('message', (packet)=>{
