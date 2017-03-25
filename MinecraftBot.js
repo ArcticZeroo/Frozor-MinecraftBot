@@ -50,13 +50,17 @@ const Color = {
 
 class MinecraftBot extends EventEmitter{
     /**
-     * @param {Object} options - bot options, dude
+     * @param {string} host - The IP of the server you are connecting to.
+     * @param {string, number} port - The port to connect to
+     * @param {string} username - The username you want to log in with
+     * @param {string} password - The password you want to use to log in
+     * @param {boolean} silent - Whether the bot should be silent
+     * @param {string} prefix - What prefix the bot should use for the logger
      */
     constructor(options){
         super();
         this.options  = Object.assign({
             message_send_interval: 1000,
-            silent: false
         }, options);
         this.log      = new Logger(((this.options.prefix)?this.options.prefix+'-':'')+'MINECRAFTBOT');
 
@@ -79,7 +83,7 @@ class MinecraftBot extends EventEmitter{
 
     init(){
         this.log.info(`Logging into ${chalk.cyan(this.options.host)}...`, 'INIT');
-        
+
         this.bot = mineflayer.createBot({
             host    : this.options.host,
             port    : this.options.port,
@@ -115,6 +119,12 @@ class MinecraftBot extends EventEmitter{
             if(coloredMessage){
                 this.log.info(coloredMessage, 'CHAT');
             }
+
+            let slackMessage = MinecraftBot.slackColorChat(message, packet);
+
+            if(slackMessage){
+                this.emit('chat-slack', slackMessage);
+            }
         });
 
         this.bot.on('kicked', (reason)=>{
@@ -137,6 +147,46 @@ class MinecraftBot extends EventEmitter{
                 .filter((i)=> i.length > 1)
                 .map((i)=> ({ code: i.substr(0, 1), text: i.substr(1)}) )
                 .forEach((i)=> message += (Color.MINECRAFT.get(i.code))(i.text));
+        }
+
+        return message;
+    }
+
+    static slackColorChat(chat, packet){
+        let message = '';
+
+        if(!chat.includes('§')){
+            let extra = packet.json.extra;
+
+            if(!extra) return chat;
+
+            extra.map((i)=> (typeof i == 'string') ? {color: 'white', text: i} : i)
+                .forEach((i)=>{
+                    if(i.bold){
+                        message += `*${i.text}*`
+                    }else if(i.italic){
+                        message += `_${i.text}_`
+                    }else if(i.strikethrough){
+                        message += `~${i.text}~`
+                    }else{
+                        message += i.text
+                    }
+                });
+        }else{
+            chat.split('§')
+                .filter((i)=> i.length > 1)
+                .map((i)=> ({ code: i.substr(0, 1), text: i.substr(1)}) )
+                .forEach((i)=>{
+                    if(i.code == 'l'){
+                        message += `*${i.text}*`
+                    }else if(i.code == 'o'){
+                        message += `_${i.text}_`
+                    }else if(i.code == 'm'){
+                        message += `~${i.text}~`
+                    }else{
+                        message += i.text
+                    }
+                });
         }
 
         return message;
@@ -176,7 +226,7 @@ class MinecraftBot extends EventEmitter{
                 message = message.toString();
             }
         }
-        
+
         if(this.message_queue.length > 0){
 
             this.message_queue.push(message);
