@@ -57,31 +57,26 @@ class MinecraftBot extends EventEmitter{
      * @param {boolean} silent - Whether the bot should be silent
      * @param {string} prefix - What prefix the bot should use for the logger
      */
-    constructor(username, password, host = 'localhost', port = 25565, silent = false, prefix){
+    constructor(options){
         super();
-        this.log      = new Logger(((prefix)?prefix+'-':'')+'MINECRAFTBOT');
+        this.options  = Object.assign({
+            message_send_interval: 1000,
+        }, options);
+        this.log      = new Logger(((this.options.prefix)?this.options.prefix+'-':'')+'MINECRAFTBOT');
 
         this.self     = this;
         this.bot      = null;
-        this.server   = null;
-        this.host     = host;
-        this.port     = port;
-        this.username = username;
-        this.password = password;
 
         this.message_queue          = [];
-        this.message_queue_last     = 0;
+        this.last_chat_message      = 0;
 
         setInterval(()=>{
-            let timeNow = Date.now()/1000;
             if(this.message_queue.length > 0){
-                let messageToSend = this.message_queue.shift();
-                this.chat(messageToSend);
-                this.message_queue_last = timeNow;
+                this.chat(this.message_queue.shift());
             }
-        }, 1000);
+        }, this.options.message_send_interval);
 
-        if(silent){
+        if(this.options.silent){
             this.log.transports.console.level = 'warn';
         }
     }
@@ -90,10 +85,10 @@ class MinecraftBot extends EventEmitter{
         this.log.info(`Logging into ${chalk.cyan(this.host)}...`, 'INIT');
         
         this.bot = mineflayer.createBot({
-            host    : this.host,
-            port    : this.port,
-            username: this.username,
-            password: this.password
+            host    : this.options.host,
+            port    : this.options.port,
+            username: this.options.username,
+            password: this.options.password
         });
 
         this.registerEvents();
@@ -117,11 +112,11 @@ class MinecraftBot extends EventEmitter{
 
             this.self.emit('chat', message.replace(/\u00A7[0-9A-FK-OR]/ig,''), packet);
 
+            this.log.debug(JSON.stringify(packet));
+
             let coloredMessage = MinecraftBot.consoleColorChat(message, packet);
 
             if(coloredMessage){
-                if(chalk.stripColor(coloredMessage).indexOf('GWEN >') > -1) return;
-
                 this.log.info(coloredMessage, 'CHAT');
             }
         });
@@ -151,6 +146,10 @@ class MinecraftBot extends EventEmitter{
         return message;
     }
 
+    getTimeSinceLastChatMessage(){
+        return (Date.now() - this.last_chat_message)/1000;
+    }
+
     /**
      * @method - Generally, don't use this method directly.
      * Only for high-priority messages that need to be sent immediately.
@@ -159,6 +158,7 @@ class MinecraftBot extends EventEmitter{
      */
     chat(message){
         this.bot.chat(message);
+        this.last_chat_message = Date.now();
     }
 
     /**
@@ -173,17 +173,28 @@ class MinecraftBot extends EventEmitter{
      * @param message - The chat message to queue.
      */
     queueMessage(message){
-        let timeNow = Date.now()/1000;
-        if((typeof message).toLowerCase() != 'string') message = message.toString();
+        if(typeof message != 'string'){
+            if(typeof message == 'object'){
+                message = JSON.stringify(message);
+            }else{
+                message = message.toString();
+            }
+        }
         
-        let last_message_difference = timeNow - this.message_queue_last;
         if(this.message_queue.length > 0){
+
             this.message_queue.push(message);
-        }else if(last_message_difference >= 1){
+
+        }
+        else if(this.getTimeSinceLastChatMessage() >= 1){
+
             this.chat(message);
-            this.message_queue_last = timeNow;
-        }else{
+
+        }
+        else{
+
             this.message_queue.push(message);
+
         }
     }
 
